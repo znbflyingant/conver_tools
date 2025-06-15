@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java to Dart 代码转换器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="converter.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .output-container {
+            margin-top: 20px;
+        }
+
+        .output-tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background: #4facfe;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .output-area {
+            position: relative;
+        }
+
+        .output-textarea {
+            background: #f8f9fa;
+            min-height: 300px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* 文件路径样式 */
+        .file-paths-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-subtitle {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-paths-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-path-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .file-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 120px;
+        }
+
+        .file-path {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            color: #333;
+        }
+
+        .copy-path-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .copy-path-btn:hover {
+            background: #0056b3;
+        }
+
+        .download-file-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .download-file-btn:hover {
+            background: #218838;
+        }
+
+        .file-path-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+
+            .file-path-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            .file-label {
+                min-width: auto;
+            }
+
+            .file-path {
+                margin-bottom: 8px;
+            }
+
+            .copy-path-btn, .download-file-btn {
+                align-self: center;
+                margin: 2px;
+            }
+
+            .file-path-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* 主导航Tab样式 */
+        .main-nav {
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 0 30px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+
+        .nav-tab:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .nav-tab.active {
+            color: #4facfe;
+            border-bottom-color: #4facfe;
+            background: #f8f9fa;
+        }
+
+        /* 主Tab内容样式 */
+        .main-tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .main-tab-content.active {
+            display: block;
+        }
+
+        /* 文档样式 */
+        .docs-section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Java to Dart 代码转换器</h1>
+            <p>快速将Java的req和rsp类转换为Dart代码，支持自动生成服务方法和枚举转换</p>
+        </div>
+
+        <!-- 主导航Tab -->
+        <div class="main-nav">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showMainTab('converter')">
+                    🔄 代码转换器
+                </button>
+                <!-- <button class="nav-tab" onclick="showMainTab('json-tools')">
+                    🛠️ JSON工具
+                </button>
+                <button class="nav-tab" onclick="showMainTab('docs')">
+                    📚 使用文档
+                </button> -->
+                <button class="nav-tab" onclick="showMainTab('enum-converter')">
+                    🔢 枚举转换器
+                </button>
+                <!-- <button class="nav-tab" onclick="showMainTab('api-generator')">
+                    🌐 API生成器
+                </button> -->
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Tab 1: 代码转换器 -->
+            <div id="converter-tab" class="main-tab-content active">
+                <!-- API接口配置区域 -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">🌐 API接口配置（可选）</div>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">接口描述</label>
+                                <input type="text" id="apiDescription" placeholder="请输入接口描述，如：请求AI生成歌词接口" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">API路径</label>
+                                <input type="text" id="apiPath" placeholder="请输入API路径，如：/api/v1/c2s/submitDtlTask" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">Host常量</label>
+                                <select id="hostConstant" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                                    <option value="HOST_SOLO">HOST_SOLO</option>
+                                    <option value="HOST_MAIN">HOST_MAIN</option>
+                                    <option value="HOST_API">HOST_API</option>
+                                    <option value="HOST_CDN">HOST_CDN</option>
+                                    <option value="HOST_UPLOAD">HOST_UPLOAD</option>
+                                    <option value="HOST_DOWNLOAD">HOST_DOWNLOAD</option>
+                                    <option value="HOST_WEBSOCKET">HOST_WEBSOCKET</option>
+                                    <option value="HOST_ADMIN">HOST_ADMIN</option>
+                                </select>
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">方法名称</label>
+                                <input type="text" id="methodName" placeholder="自动生成或手动输入方法名" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="generateApiMethod" checked>
+                                <span>生成API方法</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="includeComment" checked>
+                                <span>包含注释</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="staticMethod" checked>
+                                <span>静态方法</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="asyncMethod" checked>
+                                <span>异步方法</span>
+                            </label>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <label class="input-label">返回类型</label>
+                            <select id="returnType" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; width: 200px;">
+                                <option value="String">String</option>
+                                <option value="Map<String, dynamic>">Map&lt;String, dynamic&gt;</option>
+                                <option value="dynamic">dynamic</option>
+                                <option value="void">void</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 14px; color: #666;">
+                            💡 提示：填写API配置后，转换时会自动生成对应的API方法。如果不需要生成API方法，请取消勾选"生成API方法"。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Java代码输入区域 -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">📝 Java 代码输入</div>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">Java Request 类</label>
+                                <textarea id="javaReq" placeholder="请输入Java Request类代码...">public class Chord2SongTaskReq {
+    @NotBlank(message = "param operatorType can not be blank")
+    private String operatorType;
+    
+    private String prompt;
+    
+    private String lyric;
+    
+    @NotBlank(message = "userChord is blank")
+    private String userChord;
+    
+    @NotBlank(message = "key is blank")
+    private String key;
+    
+    @NotBlank(message = "bpm is blank")
+    private String bpm;
+    
+    @NotNull(message = "param ts can not be null")
+    private Long ts;
+    
+    @NotBlank(message = "userTime is blank")
+    private String userTime;
+    
+    @NotBlank(message = "param pageSource can not be blank")
+    private String pageSource;
+}</textarea>
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">Java Response 类</label>
+                                <textarea id="javaResp" placeholder="请输入Java Response类代码...">public class Chord2SongTaskResp {
+    private Boolean result;
+    
+    private List<String> itemIds;
+}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="convertToDart()">
+                                🔄 转换为 Dart 代码
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearAll()">
+                                🗑️ 清空所有
+                            </button>
+                            <button class="btn btn-warning" onclick="loadExample()">
+                                📋 加载示例
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 输出区域 -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">📤 生成的 Dart 代码</div>
+                    </div>
+                    <div class="section-content">
+                        <!-- 文件路径信息 -->
+                        <div class="file-paths-section" id="filePathsSection" style="display: none;">
+                            <div class="section-subtitle">📁 生成的文件路径</div>
+                            <div class="file-paths-container">
+                                <div class="file-path-item">
+                                    <span class="file-label">Request 模型:</span>
+                                    <span class="file-path" id="reqModelPath">lib/model/request_model.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('reqModelPath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadSingleFile('req')">💾</button>
+                                </div>
+                                <div class="file-path-item">
+                                    <span class="file-label">Response 模型:</span>
+                                    <span class="file-path" id="respModelPath">lib/model/response_model.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('respModelPath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadSingleFile('resp')">💾</button>
+                                </div>
+                                <div class="file-path-item">
+                                    <span class="file-label">API 服务:</span>
+                                    <span class="file-path" id="apiServicePath">lib/service/api_service.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('apiServicePath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadSingleFile('service')">💾</button>
+                                </div>
+                                <div class="file-path-item">
+                                    <span class="file-label">API 方法:</span>
+                                    <span class="file-path" id="apiMethodPath">lib/api/api_method.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('apiMethodPath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadSingleFile('api')">💾</button>
+                                </div>
+                                <div class="file-path-item">
+                                    <span class="file-label">使用示例:</span>
+                                    <span class="file-path" id="usageExamplePath">example/usage_example.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('usageExamplePath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadSingleFile('usage')">💾</button>
+                                </div>
+                                <div class="file-path-actions">
+                                    <button class="btn btn-secondary" onclick="copyAllPaths()">📋 复制所有路径</button>
+                                    <button class="btn btn-warning" onclick="downloadProjectStructure()">📥 下载项目结构</button>
+                                    <button class="btn btn-success" onclick="downloadAllFiles()">📦 下载所有文件</button>
+                                    <button class="btn btn-primary" onclick="downloadZipFile()">🗜️ 下载ZIP包</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="output-container">
+                            <div class="output-tabs">
+                                <button class="tab active" onclick="showTab('req')">Request 模型</button>
+                                <button class="tab" onclick="showTab('resp')">Response 模型</button>
+                                <button class="tab" onclick="showTab('service')">Service 方法</button>
+                                <button class="tab" onclick="showTab('api')">API 方法</button>
+                                <!-- <button class="tab" onclick="showTab('usage')">使用示例</button> -->
+                            </div>
+                            
+                            <div id="req-tab" class="tab-content active">
+                                <div class="output-area">
+                                    <textarea id="dartReq" class="output-textarea" readonly></textarea>
+                                    <button class="copy-btn" onclick="copyToClipboard('dartReq')">复制</button>
+                                </div>
+                            </div>
+                            
+                            <div id="resp-tab" class="tab-content">
+                                <div class="output-area">
+                                    <textarea id="dartResp" class="output-textarea" readonly></textarea>
+                                    <button class="copy-btn" onclick="copyToClipboard('dartResp')">复制</button>
+                                </div>
+                            </div>
+                            
+                            <div id="service-tab" class="tab-content">
+                                <div class="output-area">
+                                    <textarea id="dartService" class="output-textarea" readonly></textarea>
+                                    <button class="copy-btn" onclick="copyToClipboard('dartService')">复制</button>
+                                </div>
+                            </div>
+                            
+                            <div id="api-tab" class="tab-content">
+                                <div class="output-area">
+                                    <textarea id="dartApi" class="output-textarea" readonly></textarea>
+                                    <button class="copy-btn" onclick="copyToClipboard('dartApi')">复制</button>
+                                </div>
+                            </div>
+                            
+                            <div id="usage-tab" class="tab-content">
+                                <div class="output-area">
+                                    <textarea id="dartUsage" class="output-textarea" readonly></textarea>
+                                    <button class="copy-btn" onclick="copyToClipboard('dartUsage')">复制</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 状态消息 -->
+                <div id="statusMessage" class="status-message"></div>
+            </div>
+
+            <!-- Tab 2: JSON工具 -->
+            <div id="json-tools-tab" class="main-tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">🛠️ JSON 工具集</div>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">JSON 输入</label>
+                                <textarea id="jsonInput" placeholder="请输入JSON数据..." style="min-height: 200px;"></textarea>
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">格式化结果</label>
+                                <textarea id="jsonOutput" readonly style="min-height: 200px; background: #f8f9fa;"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="formatJson()">
+                                ✨ 格式化JSON
+                            </button>
+                            <button class="btn btn-secondary" onclick="compressJson()">
+                                🗜️ 压缩JSON
+                            </button>
+                            <button class="btn btn-warning" onclick="validateJson()">
+                                ✅ 验证JSON
+                            </button>
+                            <button class="btn btn-success" onclick="jsonToDart()">
+                                🔄 JSON转Dart类
+                            </button>
+                        </div>
+                        
+                        <div class="section" style="margin-top: 20px;">
+                            <div class="section-header">
+                                <div class="section-title">📊 JSON 信息</div>
+                            </div>
+                            <div class="section-content">
+                                <div id="jsonInfo" style="padding: 15px; background: #f8f9fa; border-radius: 8px; font-family: monospace;">
+                                    等待输入JSON数据...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: 使用文档 -->
+            <div id="docs-tab" class="main-tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">📚 使用文档</div>
+                    </div>
+                    <div class="section-content">
+                        <div style="max-width: 800px; margin: 0 auto; line-height: 1.6;">
+                            <h2 style="color: #333; margin-bottom: 20px;">🚀 快速开始</h2>
+                            
+                            <div class="docs-section">
+                                <h3 style="color: #4facfe; margin-bottom: 15px;">1. 代码转换器使用</h3>
+                                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                                    <li>在左侧输入框粘贴Java Request类代码</li>
+                                    <li>在右侧输入框粘贴Java Response类代码</li>
+                                    <li>可选：配置要过滤的字段（如id, createTime等）</li>
+                                    <li>点击"转换为Dart代码"按钮</li>
+                                    <li>在输出区域查看生成的Dart代码</li>
+                                </ul>
+                            </div>
+
+                            <div class="docs-section">
+                                <h3 style="color: #4facfe; margin-bottom: 15px;">2. 生成的代码特性</h3>
+                                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                                    <li><strong>Request类</strong>：继承ReqBaseData，只包含toJson方法</li>
+                                    <li><strong>Response类</strong>：独立类，只包含fromJson方法</li>
+                                    <li><strong>自动时间戳</strong>：Request类自动在toJson中添加ts字段</li>
+                                    <li><strong>字段过滤</strong>：自动过滤logger、serialVersionUID等无用字段</li>
+                                    <li><strong>类型转换</strong>：智能转换Java类型到Dart类型</li>
+                                </ul>
+                            </div>
+
+                            <div class="docs-section">
+                                <h3 style="color: #4facfe; margin-bottom: 15px;">3. JSON工具使用</h3>
+                                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                                    <li><strong>格式化</strong>：美化JSON格式，便于阅读</li>
+                                    <li><strong>压缩</strong>：移除空格和换行，减小体积</li>
+                                    <li><strong>验证</strong>：检查JSON语法是否正确</li>
+                                    <li><strong>转换</strong>：将JSON数据转换为Dart类定义</li>
+                                </ul>
+                            </div>
+
+                            <div class="docs-section">
+                                <h3 style="color: #4facfe; margin-bottom: 15px;">4. 枚举转换器使用</h3>
+                                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                                    <li><strong>简单枚举</strong>：支持无参数的Java枚举转换</li>
+                                    <li><strong>复杂枚举</strong>：支持带构造函数和字段的枚举</li>
+                                    <li><strong>扩展方法</strong>：自动生成getter方法和工具方法</li>
+                                    <li><strong>命名风格</strong>：支持多种命名风格转换</li>
+                                    <li><strong>字符串查找</strong>：生成fromString静态方法</li>
+                                </ul>
+                            </div>
+
+                            <div class="docs-section">
+                                <h3 style="color: #4facfe; margin-bottom: 15px;">5. 支持的Java类型</h3>
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <tr style="background: #e9ecef;">
+                                            <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">Java类型</th>
+                                            <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">Dart类型</th>
+                                        </tr>
+                                        <tr><td style="padding: 8px; border: 1px solid #dee2e6;">String</td><td style="padding: 8px; border: 1px solid #dee2e6;">String</td></tr>
+                                        <tr><td style="padding: 8px; border: 1px solid #dee2e6;">Integer/Long</td><td style="padding: 8px; border: 1px solid #dee2e6;">int</td></tr>
+                                        <tr><td style="padding: 8px; border: 1px solid #dee2e6;">Boolean</td><td style="padding: 8px; border: 1px solid #dee2e6;">bool</td></tr>
+                                        <tr><td style="padding: 8px; border: 1px solid #dee2e6;">Double/Float</td><td style="padding: 8px; border: 1px solid #dee2e6;">double</td></tr>
+                                        <tr><td style="padding: 8px; border: 1px solid #dee2e6;">List&lt;T&gt;</td><td style="padding: 8px; border: 1px solid #dee2e6;">List&lt;T&gt;</td></tr>
+                                        <tr><td style="padding: 8px; border: 1px solid #dee2e6;">Map&lt;K,V&gt;</td><td style="padding: 8px; border: 1px solid #dee2e6;">Map&lt;K,V&gt;</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="docs-section">
+                                <h3 style="color: #4facfe; margin-bottom: 15px;">6. 注意事项</h3>
+                                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                                    <li>确保Java代码格式正确，包含完整的类定义</li>
+                                    <li>支持@NotNull、@NotBlank等验证注解</li>
+                                    <li>生成的Dart代码需要添加相应的依赖包</li>
+                                    <li>Request类需要确保ReqBaseData类存在</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: 枚举转换器 -->
+            <div id="enum-converter-tab" class="main-tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">🔢 Java 枚举转换器</div>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">Java 枚举定义</label>
+                                <textarea id="javaEnum" placeholder="请输入Java枚举代码..." style="min-height: 300px;">public enum UserStatus {
+    ACTIVE("active", "激活"),
+    INACTIVE("inactive", "未激活"),
+    SUSPENDED("suspended", "暂停"),
+    DELETED("deleted", "已删除");
+    
+    private final String code;
+    private final String description;
+    
+    UserStatus(String code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+    
+    public String getCode() {
+        return code;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+}</textarea>
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">Dart 枚举定义</label>
+                                <textarea id="dartEnum" readonly style="min-height: 300px; background: #f8f9fa;"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="convertEnumToDart()">
+                                🔄 转换枚举
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearEnumFields()">
+                                🗑️ 清空
+                            </button>
+                            <button class="btn btn-warning" onclick="loadEnumExample()">
+                                📋 加载示例
+                            </button>
+                            <button class="btn btn-success" onclick="copyToClipboard('dartEnum')">
+                                📋 复制结果
+                            </button>
+                            <button class="btn btn-primary" onclick="downloadEnumFile()">
+                                💾 下载文件
+                            </button>
+                        </div>
+                        
+                        <div class="section" style="margin-top: 20px;">
+                            <div class="section-header">
+                                <div class="section-title">⚙️ 转换选项</div>
+                            </div>
+                            <div class="section-content">
+                                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="generateExtension" checked>
+                                        <span>生成扩展方法</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="generateFromString" checked>
+                                        <span>生成fromString方法</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="generateDescription" checked>
+                                        <span>生成description属性</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label class="input-label">枚举命名风格</label>
+                                    <select id="enumNamingStyle" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; width: 200px;">
+                                        <option value="camelCase">camelCase (默认)</option>
+                                        <option value="PascalCase">PascalCase</option>
+                                        <option value="snake_case">snake_case</option>
+                                        <option value="UPPER_CASE">UPPER_CASE</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section" style="margin-top: 20px;">
+                            <div class="section-header">
+                                <div class="section-title">📝 支持的Java枚举特性</div>
+                            </div>
+                            <div class="section-content">
+                                <ul style="margin-left: 20px; line-height: 1.6;">
+                                    <li>✅ 简单枚举值</li>
+                                    <li>✅ 带构造函数的枚举</li>
+                                    <li>✅ 多个字段的枚举</li>
+                                    <li>✅ 枚举方法（getter）</li>
+                                    <li>✅ 枚举描述和代码值</li>
+                                    <li>✅ 自动生成扩展方法</li>
+                                    <li>✅ 字符串查找方法</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- 枚举文件路径信息 -->
+                        <div class="file-paths-section" id="enumFilePathsSection" style="display: none;">
+                            <div class="section-subtitle">📁 生成的枚举文件路径</div>
+                            <div class="file-paths-container">
+                                <div class="file-path-item">
+                                    <span class="file-label">枚举文件:</span>
+                                    <span class="file-path" id="enumFilePath">lib/enums/user_status.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('enumFilePath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadEnumFile()">💾</button>
+                                </div>
+                                <div class="file-path-actions">
+                                    <button class="btn btn-secondary" onclick="copyEnumFilePath()">📋 复制文件路径</button>
+                                    <button class="btn btn-success" onclick="downloadEnumFile()">💾 下载枚举文件</button>
+                                    <button class="btn btn-warning" onclick="downloadEnumWithExample()">📦 下载含使用示例</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: API生成器 -->
+            <div id="api-generator-tab" class="main-tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">🌐 API接口生成器</div>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">接口描述</label>
+                                <input type="text" id="apiDescription" placeholder="请输入接口描述，如：请求AI生成歌词接口" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">API路径</label>
+                                <input type="text" id="apiPath" placeholder="请输入API路径，如：/api/v1/c2s/submitDtlTask" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">Host常量</label>
+                                <select id="hostConstant" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                                    <option value="HOST_SOLO">HOST_SOLO</option>
+                                    <option value="HOST_MAIN">HOST_MAIN</option>
+                                    <option value="HOST_API">HOST_API</option>
+                                    <option value="HOST_CDN">HOST_CDN</option>
+                                    <option value="HOST_UPLOAD">HOST_UPLOAD</option>
+                                    <option value="HOST_DOWNLOAD">HOST_DOWNLOAD</option>
+                                    <option value="HOST_WEBSOCKET">HOST_WEBSOCKET</option>
+                                    <option value="HOST_ADMIN">HOST_ADMIN</option>
+                                </select>
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">方法名称</label>
+                                <input type="text" id="methodName" placeholder="自动生成或手动输入方法名，如：submitDtlTask" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="generateApiMethod()">
+                                🚀 生成API方法
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearApiFields()">
+                                🗑️ 清空
+                            </button>
+                            <button class="btn btn-warning" onclick="loadApiExample()">
+                                📋 加载示例
+                            </button>
+                            <button class="btn btn-success" onclick="copyToClipboard('generatedApiCode')">
+                                📋 复制代码
+                            </button>
+                        </div>
+                        
+                        <div class="section" style="margin-top: 20px;">
+                            <div class="section-header">
+                                <div class="section-title">📤 生成的API方法</div>
+                            </div>
+                            <div class="section-content">
+                                <div class="output-area">
+                                    <textarea id="generatedApiCode" readonly style="min-height: 200px; background: #f8f9fa; width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.5;"></textarea>
+                                    <button class="copy-btn" onclick="copyToClipboard('generatedApiCode')">复制</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section" style="margin-top: 20px;">
+                            <div class="section-header">
+                                <div class="section-title">⚙️ 生成选项</div>
+                            </div>
+                            <div class="section-content">
+                                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="includeComment" checked>
+                                        <span>包含注释</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="staticMethod" checked>
+                                        <span>静态方法</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="asyncMethod" checked>
+                                        <span>异步方法</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="returnString" checked>
+                                        <span>返回String类型</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label class="input-label">返回类型</label>
+                                    <select id="returnType" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; width: 200px;">
+                                        <option value="String">String</option>
+                                        <option value="Map<String, dynamic>">Map&lt;String, dynamic&gt;</option>
+                                        <option value="dynamic">dynamic</option>
+                                        <option value="void">void</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section" style="margin-top: 20px;">
+                            <div class="section-header">
+                                <div class="section-title">📝 使用说明</div>
+                            </div>
+                            <div class="section-content">
+                                <ul style="margin-left: 20px; line-height: 1.6;">
+                                    <li>✅ 输入接口描述，将作为方法注释</li>
+                                    <li>✅ 输入API路径，如：/api/v1/c2s/submitDtlTask</li>
+                                    <li>✅ 选择Host常量，如：HOST_SOLO</li>
+                                    <li>✅ 方法名会根据API路径自动生成，也可手动修改</li>
+                                    <li>✅ 支持多种返回类型和生成选项</li>
+                                    <li>✅ 生成的代码可直接复制到项目中使用</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- API文件路径信息 -->
+                        <div class="file-paths-section" id="apiFilePathsSection" style="display: none;">
+                            <div class="section-subtitle">📁 建议的文件路径</div>
+                            <div class="file-paths-container">
+                                <div class="file-path-item">
+                                    <span class="file-label">API服务文件:</span>
+                                    <span class="file-path" id="apiServiceFilePath">lib/service/api_service.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('apiServiceFilePath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadApiFile()">💾</button>
+                                </div>
+                                <div class="file-path-item">
+                                    <span class="file-label">API方法文件:</span>
+                                    <span class="file-path" id="apiMethodFilePath">lib/api/api_method.dart</span>
+                                    <button class="copy-path-btn" onclick="copyFilePath('apiMethodFilePath')">📋</button>
+                                    <button class="download-file-btn" onclick="downloadApiFile()">💾</button>
+                                </div>
+                                <div class="file-path-actions">
+                                    <button class="btn btn-secondary" onclick="copyApiFilePath()">📋 复制文件路径</button>
+                                    <button class="btn btn-success" onclick="downloadApiFile()">💾 下载API文件</button>
+                                    <button class="btn btn-warning" onclick="downloadApiWithExample()">📦 下载含使用示例</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,32 @@
+[build]
+  # 发布目录 - 由于是静态HTML文件，直接发布根目录
+  publish = "."
+  
+  # 构建命令 - 静态文件不需要构建
+  command = ""
+
+# 重定向规则 - 将所有路径重定向到主HTML文件
+[[redirects]]
+  from = "/*"
+  to = "/java_to_dart_converter.html"
+  status = 200
+
+# 自定义首页
+[[redirects]]
+  from = "/"
+  to = "/java_to_dart_converter.html"
+  status = 200
+
+# Headers 配置
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    
+# JS 文件的 MIME 类型
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Content-Type = "application/javascript" 
