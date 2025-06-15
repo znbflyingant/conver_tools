@@ -501,56 +501,25 @@
                             </div>
                         </div>
                         
-                        <!-- 高级选项折叠区域 -->
-                        <div style="border: 1px solid #e0e0e0; border-radius: 8px; margin-top: 15px;">
-                            <div style="padding: 10px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; background: #f8f9fa;" onclick="toggleAdvancedOptions('api-advanced-options')">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span>⚙️ 高级选项</span>
-                                    <span style="font-size: 12px; color: #666;">(默认已启用所有功能，点击展开可自定义)</span>
-                                    <span id="api-advanced-toggle" style="margin-left: auto; font-size: 12px;">▼</span>
-                                </div>
-                            </div>
-                            <div id="api-advanced-options" style="display: none; padding: 15px;">
-                                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                                    <label style="display: flex; align-items: center; gap: 8px;">
-                                        <input type="checkbox" id="generateApiMethod" checked>
-                                        <span>生成API方法</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px;">
-                                        <input type="checkbox" id="includeComment" checked>
-                                        <span>包含注释</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px;">
-                                        <input type="checkbox" id="staticMethod" checked>
-                                        <span>静态方法</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px;">
-                                        <input type="checkbox" id="asyncMethod" checked>
-                                        <span>异步方法</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top: 15px;">
-                            <label class="input-label">返回类型</label>
-                            <select id="returnType" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; width: 200px;">
-                                <option value="String">String</option>
-                                <option value="Map<String, dynamic>">Map&lt;String, dynamic&gt;</option>
-                                <option value="dynamic">dynamic</option>
-                                <option value="void">void</option>
+                        <!-- 隐藏的配置元素，用于保持JavaScript兼容性 -->
+                        <div style="display: none;">
+                            <input type="checkbox" id="generateApiMethod" checked>
+                            <input type="checkbox" id="includeComment" checked>
+                            <input type="checkbox" id="staticMethod" checked>
+                            <input type="checkbox" id="asyncMethod" checked>
+                            <select id="returnType">
+                                <option value="String" selected>String</option>
                             </select>
                         </div>
                         
-                        <div style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 8px; font-size: 14px; color: #333; border-left: 4px solid #2196F3;">
+                        <div style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%); border-radius: 8px; font-size: 14px; color: #333; border-left: 4px solid #4CAF50;">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <span style="font-size: 20px;">🚀</span>
-                                <strong>智能转换已启用</strong>
+                                <span style="font-size: 20px;">✨</span>
+                                <strong>智能转换器</strong>
                             </div>
                             <div style="line-height: 1.6;">
-                                ✅ <strong>默认启用所有功能</strong>：API方法生成、注释添加、静态/异步方法等<br>
-                                📝 只需填写 Java 代码，转换器会自动处理所有细节<br>
-                                ⚙️ 如需自定义设置，可点击上方"高级选项"进行调整
+                                🎯 <strong>全自动处理</strong>：API方法、注释、静态/异步方法、扩展方法等全部自动生成<br>
+                                📝 <strong>零配置使用</strong>：只需填写 Java 代码，一键获得完整 Dart 代码
                             </div>
                         </div>
                     </div>
@@ -910,31 +879,11 @@
                                 <div class="section-title">⚙️ 转换选项</div>
                             </div>
                             <div class="section-content">
-                                <!-- 高级选项折叠区域 -->
-                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px;">
-                                    <div style="padding: 10px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; background: #f8f9fa;" onclick="toggleAdvancedOptions('enum-advanced-options')">
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <span>⚙️ 高级选项</span>
-                                            <span style="font-size: 12px; color: #666;">(默认已启用所有功能，点击展开可自定义)</span>
-                                            <span id="enum-advanced-toggle" style="margin-left: auto; font-size: 12px;">▼</span>
-                                        </div>
-                                    </div>
-                                    <div id="enum-advanced-options" style="display: none; padding: 15px;">
-                                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                                            <label style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="checkbox" id="generateExtension" checked>
-                                                <span>生成扩展方法</span>
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="checkbox" id="generateFromString" checked>
-                                                <span>生成fromString方法</span>
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="checkbox" id="generateDescription" checked>
-                                                <span>生成description属性</span>
-                                            </label>
-                                        </div>
-                                    </div>
+                                <!-- 隐藏的配置元素，用于保持JavaScript兼容性 -->
+                                <div style="display: none;">
+                                    <input type="checkbox" id="generateExtension" checked>
+                                    <input type="checkbox" id="generateFromString" checked>
+                                    <input type="checkbox" id="generateDescription" checked>
                                 </div>
                                 
                                 <div style="margin-bottom: 15px;">
@@ -1052,52 +1001,15 @@
                             </div>
                         </div>
                         
-                        <div class="section" style="margin-top: 20px;">
-                            <div class="section-header">
-                                <div class="section-title">⚙️ 生成选项</div>
-                            </div>
-                            <div class="section-content">
-                                <!-- 高级选项折叠区域 -->
-                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px;">
-                                    <div style="padding: 10px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; background: #f8f9fa;" onclick="toggleAdvancedOptions('api-gen-advanced-options')">
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <span>⚙️ 高级选项</span>
-                                            <span style="font-size: 12px; color: #666;">(默认已启用所有功能，点击展开可自定义)</span>
-                                            <span id="api-gen-advanced-toggle" style="margin-left: auto; font-size: 12px;">▼</span>
-                                        </div>
-                                    </div>
-                                    <div id="api-gen-advanced-options" style="display: none; padding: 15px;">
-                                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                                            <label style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="checkbox" id="includeComment" checked>
-                                                <span>包含注释</span>
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="checkbox" id="staticMethod" checked>
-                                                <span>静态方法</span>
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="checkbox" id="asyncMethod" checked>
-                                                <span>异步方法</span>
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="checkbox" id="returnString" checked>
-                                                <span>返回String类型</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div style="margin-bottom: 15px;">
-                                    <label class="input-label">返回类型</label>
-                                    <select id="returnType" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; width: 200px;">
-                                        <option value="String">String</option>
-                                        <option value="Map<String, dynamic>">Map&lt;String, dynamic&gt;</option>
-                                        <option value="dynamic">dynamic</option>
-                                        <option value="void">void</option>
-                                    </select>
-                                </div>
-                            </div>
+                        <!-- 隐藏的配置元素，用于保持JavaScript兼容性 -->
+                        <div style="display: none;">
+                            <input type="checkbox" id="includeComment" checked>
+                            <input type="checkbox" id="staticMethod" checked>
+                            <input type="checkbox" id="asyncMethod" checked>
+                            <input type="checkbox" id="returnString" checked>
+                            <select id="returnType">
+                                <option value="String" selected>String</option>
+                            </select>
                         </div>
                         
                         <div class="section" style="margin-top: 20px;">

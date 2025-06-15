@@ -2068,16 +2068,4 @@ if(response != null) {
     }
 }
 
-// 切换高级选项显示/隐藏
-function toggleAdvancedOptions(optionsId) {
-    const optionsDiv = document.getElementById(optionsId);
-    const toggleSpan = document.getElementById(optionsId.replace('-options', '-toggle'));
-    
-    if (optionsDiv.style.display === 'none' || optionsDiv.style.display === '') {
-        optionsDiv.style.display = 'block';
-        toggleSpan.textContent = '▲';
-    } else {
-        optionsDiv.style.display = 'none';
-        toggleSpan.textContent = '▼';
-    }
-} 
+ 
