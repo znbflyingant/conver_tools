@@ -2066,4 +2066,18 @@ if(response != null) {
 // 错误信息: ${error.message}
 // 请检查配置是否正确`;
     }
+}
+
+// 切换高级选项显示/隐藏
+function toggleAdvancedOptions(optionsId) {
+    const optionsDiv = document.getElementById(optionsId);
+    const toggleSpan = document.getElementById(optionsId.replace('-options', '-toggle'));
+    
+    if (optionsDiv.style.display === 'none' || optionsDiv.style.display === '') {
+        optionsDiv.style.display = 'block';
+        toggleSpan.textContent = '▲';
+    } else {
+        optionsDiv.style.display = 'none';
+        toggleSpan.textContent = '▼';
+    }
 } 
