@@ -1981,6 +1981,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // 为十六进制输入框添加自动触发功能
+    const hexInput = document.getElementById('hexInput');
+    if (hexInput) {
+        hexInput.addEventListener('input', function() {
+            // 添加延迟以避免频繁触发
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => {
+                generateHexIndex();
+            }, 300);
+        });
+    }
 });
 
 // 根据配置生成API方法
@@ -2066,6 +2078,260 @@ if(response != null) {
 // 错误信息: ${error.message}
 // 请检查配置是否正确`;
     }
+}
+
+// ==================== 十六进制索引器功能 ====================
+
+// 生成十六进制索引标记
+function generateHexIndex() {
+    const input = document.getElementById('hexInput').value;
+    
+    if (!input.trim()) {
+        document.getElementById('hexOutput').textContent = '在左侧输入十六进制数据...';
+        return;
+    }
+    
+    try {
+        // 使用默认显示选项
+        const showUppercase = true;  // 默认转换为大写
+        const showSpaces = false;    // 默认不添加空格
+        const showColorCode = false; // 默认不显示颜色代码
+        const groupByBytes = false;  // 默认不按字节分组
+        const preserveSpaces = false; // 默认不保留空格
+        
+        // 处理输入字符串
+        let processedInput = input;
+        let charInfoArray = [];
+        let validCharCount = 0;
+        let invalidCharCount = 0;
+        
+        // 分析每个字符
+        for (let i = 0; i < input.length; i++) {
+            const char = input[i];
+            const isHexChar = /[0-9A-Fa-f]/.test(char);
+            const isSpace = char === ' ';
+            
+            if (isHexChar) {
+                charInfoArray.push({
+                    char: showUppercase ? char.toUpperCase() : char,
+                    originalIndex: i,
+                    hexIndex: validCharCount,
+                    byteIndex: Math.floor(validCharCount / 2), // 字节索引：每2个字符为1个字节
+                    isValid: true,
+                    isSpace: false
+                });
+                validCharCount++;
+            } else if (isSpace && preserveSpaces) {
+                charInfoArray.push({
+                    char: char,
+                    originalIndex: i,
+                    hexIndex: -1,
+                    isValid: false,
+                    isSpace: true
+                });
+            } else if (!isSpace) {
+                invalidCharCount++;
+            }
+        }
+        
+        // 计算统计信息
+        const totalChars = input.length;
+        const spaceCount = (input.match(/ /g) || []).length;
+        const actualInvalidChars = totalChars - validCharCount - spaceCount;
+        const byteCount = Math.floor(validCharCount / 2);
+        
+        // 不显示统计信息，但保持功能完整性
+        
+        if (validCharCount === 0) {
+            document.getElementById('hexOutput').textContent = '未找到有效的十六进制字符（0-9, A-F, a-f）';
+            return;
+        }
+        
+        // 生成输出
+        let output = '';
+        
+        if (preserveSpaces) {
+            output = generatePreservedSpaceOutput(charInfoArray, showSpaces);
+        } else {
+            // 只使用有效的十六进制字符，使用字节索引
+            const validCharInfos = charInfoArray.filter(info => info.isValid);
+            
+            if (showColorCode && validCharCount >= 6) {
+                output = generateColorCodeOutput(validCharInfos.map(info => info.char).join(''), showSpaces, groupByBytes);
+            } else if (groupByBytes) {
+                output = generateByteGroupOutput(validCharInfos.map(info => info.char).join(''), showSpaces);
+            } else {
+                output = generateBasicOutput(validCharInfos.map(info => info.char).join(''), showSpaces);
+            }
+        }
+        
+        document.getElementById('hexOutput').innerHTML = output;
+        
+    } catch (error) {
+        console.error('处理十六进制字符串时出错：', error);
+        document.getElementById('hexOutput').textContent = '处理出错：' + error.message;
+    }
+}
+
+// 生成保留空格的输出格式（表格样式）
+function generatePreservedSpaceOutput(charInfoArray, showSpaces) {
+    // 提取有效的十六进制字符，保持原始顺序
+    const validChars = charInfoArray.filter(info => info.isValid).map(info => info.char);
+    
+    // 如果没有有效字符，返回提示
+    if (validChars.length === 0) {
+        return '<div style="color: #666;">请输入有效的十六进制数据</div>';
+    }
+    
+    // 使用表格格式显示（与基础输出格式相同）
+    return generateBasicOutput(validChars.join(''), showSpaces);
+}
+
+// 生成基础输出格式（表格样式）
+function generateBasicOutput(hexString, showSpaces) {
+    // 将十六进制字符串按字节分组
+    const bytes = [];
+    for (let i = 0; i < hexString.length; i += 2) {
+        const byte = hexString.substr(i, 2);
+        if (byte.length === 2) {
+            bytes.push(byte);
+        } else if (byte.length === 1) {
+            bytes.push(byte + '0'); // 补齐不完整的字节
+        }
+    }
+    
+    if (bytes.length === 0) {
+        return '<div style="color: #666;">请输入有效的十六进制数据</div>';
+    }
+    
+    // 生成表格HTML
+    let tableHTML = `
+        <table style="width: 100%; border-collapse: collapse; font-family: monospace; margin-top: 10px;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6; font-weight: bold; color: #495057;">Byte</th>
+                    <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6; font-weight: bold; color: #495057;">Value[Hex]</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    // 添加每个字节的行
+    for (let i = 0; i < bytes.length; i++) {
+        const byte = bytes[i];
+        
+        tableHTML += `
+            <tr style="border-bottom: 1px solid #dee2e6; ${i % 2 === 0 ? 'background: #f8f9fa;' : 'background: white;'}">
+                <td style="padding: 10px; text-align: center; border: 1px solid #dee2e6; font-weight: bold; color: #007bff;">${i}</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #dee2e6; font-weight: bold; color: #28a745;">${byte}</td>
+            </tr>
+        `;
+    }
+    
+    tableHTML += `
+            </tbody>
+        </table>
+        <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+            <div><strong>总字节数:</strong> ${bytes.length}</div>
+            <div><strong>十六进制数据:</strong> ${bytes.join(' ')}</div>
+        </div>
+    `;
+    
+    return tableHTML;
+}
+
+// 已删除字节描述功能，简化表格显示
+
+// 生成字节分组输出格式（使用表格样式）
+function generateByteGroupOutput(hexString, showSpaces) {
+    // 使用与基础输出相同的表格格式
+    return generateBasicOutput(hexString, showSpaces);
+}
+
+// 生成颜色代码输出格式（使用表格样式）
+function generateColorCodeOutput(hexString, showSpaces, groupByBytes) {
+    // 使用与基础输出相同的表格格式
+    return generateBasicOutput(hexString, showSpaces);
+}
+
+// 删除了统计信息显示功能
+
+// 清空十六进制字段
+function clearHexFields() {
+    document.getElementById('hexInput').value = '';
+    document.getElementById('hexOutput').textContent = '在左侧输入十六进制数据...';
+    showStatus('已清空所有字段', 'info');
+}
+
+// 加载十六进制示例
+function loadHexExample() {
+    const examples = [
+        'F1050001000A10',        // 协议包示例1
+        'F1 08 00 02 00 0B 20 FF', // 协议包示例2（带空格）
+        'AA BB CC DD EE FF',       // 简单数据包
+        'F10800020011AB',          // 短协议包
+        'F11000030022CDEF1234',    // 长协议包
+        '1A2B3C4D5E6F',           // 基础数据
+        'DEADBEEF',               // 经典数据
+        '0123456789ABCDEF',       // 完整序列
+        'FF0000FF0000',           // 重复模式
+        'A1B2C3D4E5F6'            // 随机数据
+    ];
+    
+    const randomExample = examples[Math.floor(Math.random() * examples.length)];
+    document.getElementById('hexInput').value = randomExample;
+    generateHexIndex();
+    showStatus('已加载示例数据', 'success');
+}
+
+// 复制十六进制结果
+async function copyHexResult() {
+    const outputElement = document.getElementById('hexOutput');
+    const textContent = outputElement.textContent || outputElement.innerText;
+    
+    try {
+        await navigator.clipboard.writeText(textContent);
+        showStatus('结果已复制到剪贴板！', 'success');
+    } catch (err) {
+        // 降级方案
+        const textArea = document.createElement('textarea');
+        textArea.value = textContent;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showStatus('结果已复制到剪贴板！', 'success');
+    }
+}
+
+// 下载十六进制结果
+function downloadHexResult() {
+    const input = document.getElementById('hexInput').value;
+    const outputElement = document.getElementById('hexOutput');
+    const textContent = outputElement.textContent || outputElement.innerText;
+    
+    if (!input.trim()) {
+        showStatus('请先输入十六进制字符串', 'error');
+        return;
+    }
+    
+    // 生成文件内容
+    const content = `十六进制索引标记结果
+============================
+
+输入内容: ${input.trim()}
+
+处理结果:
+${textContent}
+
+生成时间: ${new Date().toLocaleString()}
+`;
+    
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = `hex_index_result_${timestamp}.txt`;
+    
+    downloadFile(content, filename);
+    showStatus('文件下载成功！', 'success');
 }
 
  

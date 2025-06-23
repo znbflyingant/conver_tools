@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Java to Dart 代码转换器</title>
+    <title>代码转换器</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="converter.js"></script>
     <style>
@@ -436,8 +436,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Java to Dart 代码转换器</h1>
-            <p>快速将Java的req和rsp类转换为Dart代码，支持自动生成服务方法和枚举转换</p>
+            <h1>代码转换器</h1>
         </div>
 
         <!-- 主导航Tab -->
@@ -454,6 +453,9 @@
                 </button> -->
                 <button class="nav-tab" onclick="showMainTab('enum-converter')">
                     🔢 枚举转换器
+                </button>
+                <button class="nav-tab" onclick="showMainTab('hex-indexer')">
+                    📊 协议数据解析器
                 </button>
                 <!-- <button class="nav-tab" onclick="showMainTab('api-generator')">
                     🌐 API生成器
@@ -936,7 +938,66 @@
                 </div>
             </div>
 
-            <!-- Tab 5: API生成器 -->
+            <!-- Tab 5: 十六进制索引器 -->
+            <div id="hex-indexer-tab" class="main-tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">📊 十六进制协议数据解析器</div>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label class="input-label">十六进制字符串</label>
+                                <textarea id="hexInput" placeholder="请输入十六进制数据，如：F1050001000A10..." style="min-height: 150px; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 2px;"></textarea>
+                                <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                                    💡 输入十六进制数据，系统会生成分析表格，显示字节索引和对应的十六进制值
+                                </div>
+                            </div>
+                            <div class="input-container">
+                                <label class="input-label">解析结果</label>
+                                <div id="hexOutput" style="min-height: 150px; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; background: #f8f9fa; font-family: 'Courier New', monospace; font-size: 16px; line-height: 2.5; overflow-x: auto; white-space: pre-wrap;">
+                                                                          在左侧输入十六进制数据...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="generateHexIndex()">
+                                📊 解析数据
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearHexFields()">
+                                🗑️ 清空
+                            </button>
+                            <button class="btn btn-warning" onclick="loadHexExample()">
+                                📋 加载示例
+                            </button>
+                            <button class="btn btn-success" onclick="copyHexResult()">
+                                📋 复制结果
+                            </button>
+                            <button class="btn btn-primary" onclick="downloadHexResult()">
+                                💾 下载文件
+                            </button>
+                        </div>
+                        
+                        <!-- 隐藏的默认配置 -->
+                        <div style="display: none;">
+                            <input type="checkbox" id="showUppercase" checked>
+                            <input type="checkbox" id="showSpaces">
+                            <input type="checkbox" id="showColorCode">
+                            <input type="checkbox" id="groupByBytes">
+                            <input type="checkbox" id="preserveSpaces">
+                            <div id="hexStats">
+                                <span id="totalChars">0</span>
+                                <span id="validChars">0</span>
+                                <span id="byteCount">0</span>
+                                <span id="invalidChars">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 6: API生成器 -->
             <div id="api-generator-tab" class="main-tab-content">
                 <div class="section">
                     <div class="section-header">
